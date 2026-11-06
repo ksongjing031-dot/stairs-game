@@ -220,10 +220,17 @@ async function handleGameOver(score, reason) {
 
 $("startBtn").addEventListener("click", startGame);
 $("retryBtn").addEventListener("click", startGame);
-$("homeBtn").addEventListener("click", () => {
+function goHome() {
   game.stop();
   showScreen("home");
   loadRanking();
+}
+$("homeBtn").addEventListener("click", goHome);
+$("quitBtn").addEventListener("click", goHome);
+
+// ゲーム画面で Esc を押すとホームへ
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && $("game").classList.contains("active")) goHome();
 });
 
 // Enter キー：ホームならスタート、ゲームオーバー画面ならもう一度
