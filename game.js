@@ -289,7 +289,7 @@ export class StairsGame {
 
     // スコア
     ctx.textAlign = "center";
-    ctx.font = "800 46px 'M PLUS Rounded 1c', sans-serif";
+    ctx.font = "500 46px 'Jost', sans-serif";
     ctx.lineWidth = 6;
     ctx.strokeStyle = "rgba(0,0,0,0.5)";
     ctx.strokeText(this.score, W / 2, 62);
@@ -311,7 +311,7 @@ export class StairsGame {
     // スタート前のヒント
     if (!this.started && this.state === "playing") {
       ctx.fillStyle = "rgba(255,255,255,0.9)";
-      ctx.font = "bold 18px 'M PLUS Rounded 1c', sans-serif";
+      ctx.font = "500 17px 'Zen Kaku Gothic New', sans-serif";
       ctx.fillText("← → キーで登ろう！", W / 2, H - 40);
     }
   }
