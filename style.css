@@ -3,173 +3,338 @@
 [hidden] { display: none !important; } /* hidden属性を必ず効かせる */
 
 :root {
-  --bg: #12122a;
-  --card: #1d1d3f;
-  --line: #34346a;
-  --text: #f1f0ff;
-  --sub: #a9a7d6;
-  --accent: #ffcf4a;
-  --accent2: #ff6b9a;
-  --ok: #6be3a5;
-  --ng: #ff7a7a;
+  --bg: #f3f1ec;      /* 背景：生成り色 */
+  --paper: #fbfaf7;   /* 小窓の背景 */
+  --ink: #151515;     /* 文字・線 */
+  --sub: #77736b;     /* 控えめな文字 */
+  --line: #d8d3c8;    /* 細い線 */
+  --accent: #ff4d2e;  /* アクセント（1色だけ） */
+  --ok: #1f8a5b;
+  --ng: #d93a2b;
+  --en: "Jost", "Helvetica Neue", Arial, sans-serif;
+  --ja: "Zen Kaku Gothic New", "Hiragino Sans", "Meiryo", sans-serif;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Meiryo", sans-serif;
-  color: var(--text);
-  background:
-    radial-gradient(circle at 20% 10%, #2b2b66 0, transparent 40%),
-    radial-gradient(circle at 80% 90%, #3a1f4f 0, transparent 45%),
-    var(--bg);
+  font-family: var(--ja);
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
 }
+
+button { font: inherit; color: inherit; }
 
 /* ===== 画面切り替え ===== */
 .screen { display: none; }
 .screen.active { display: block; }
 
 /* ===== ホーム画面 ===== */
-#home {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 32px 16px 48px;
+#home.active {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.logo {
-  text-align: center;
-  font-size: 44px;
-  font-weight: 800;
-  margin: 0 0 24px;
-  color: var(--accent);
-  text-shadow: 0 4px 0 #b3771a;
-  letter-spacing: 4px;
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px clamp(20px, 6vw, 72px);
+  position: relative;
+  z-index: 1;
 }
-.logo span {
-  display: block;
-  font-size: 13px;
-  letter-spacing: 6px;
-  color: var(--sub);
-  text-shadow: none;
-  margin-top: 4px;
-}
+.brand { font-family: var(--en); font-weight: 500; letter-spacing: .2em; font-size: 13px; }
 
-.card {
-  background: var(--card);
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 18px 20px;
-  margin-bottom: 16px;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color .2s;
 }
-.card h2 {
-  margin: 0 0 12px;
-  font-size: 17px;
-  color: var(--accent);
+.user-chip:hover { border-color: var(--ink); }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.dot.on { background: var(--accent); }
+
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 clamp(20px, 6vw, 72px) 56px;
+  max-width: 760px;
+  position: relative;
+  z-index: 1;
 }
 
-.howto { margin: 0; padding-left: 20px; line-height: 1.9; font-size: 14px; }
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  font-family: var(--en);
+  font-size: 13px;
+  letter-spacing: .12em;
+  color: var(--sub);
+}
+.square { width: 9px; height: 9px; background: var(--accent); }
+
+.title {
+  margin: 0;
+  font-family: var(--en);
+  font-size: clamp(56px, 11vw, 136px);
+  line-height: .9;
+  letter-spacing: .01em;
+}
+.title span { display: block; }
+.title .thin { font-weight: 200; }
+.title .bold { font-weight: 500; }
+
+.leader {
+  margin: 22px 0 0;
+  font-size: 13px;
+  color: var(--sub);
+}
+.leader b { color: var(--ink); font-weight: 500; }
+.leader .num { font-family: var(--en); font-weight: 500; color: var(--ink); }
+
+/* スタートボタン：左から色が塗られていく */
+.start {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  width: min(520px, 100%);
+  margin-top: 40px;
+  padding: 22px 4px;
+  border: none;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  isolation: isolate;
+}
+.start::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .35s cubic-bezier(.6, 0, .2, 1);
+  z-index: -1;
+}
+.start:hover::before, .start:focus-visible::before { transform: scaleX(1); }
+.start:hover, .start:focus-visible { color: var(--bg); outline: none; }
+.start-label {
+  font-family: var(--en);
+  font-weight: 400;
+  font-size: 34px;
+  letter-spacing: .28em;
+  padding-left: 12px;
+}
+.start-sub { grid-column: 1; font-size: 12px; color: var(--sub); padding-left: 14px; margin-top: 2px; }
+.start:hover .start-sub, .start:focus-visible .start-sub { color: #bdb8ae; }
+.start-arrow {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  font-family: var(--en);
+  font-size: 30px;
+  font-weight: 200;
+  padding-right: 14px;
+  color: var(--accent);
+  transition: transform .35s cubic-bezier(.6, 0, .2, 1);
+}
+.start:hover .start-arrow { transform: translateX(8px); }
+
+.note { margin: 12px 0 0; font-size: 12px; color: var(--sub); }
+
+.menu { display: flex; flex-wrap: wrap; gap: 8px 32px; margin-top: 44px; }
+.menu button {
+  padding: 4px 0;
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: none;
+  font-size: 15px;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.menu button:hover { border-color: var(--ink); }
+.menu i, .panel-head i {
+  font-style: normal;
+  font-family: var(--en);
+  font-size: 11px;
+  color: var(--accent);
+  margin-right: 8px;
+  vertical-align: 2px;
+}
+
+/* 飾りの階段 */
+.deco {
+  position: absolute;
+  right: clamp(-80px, 2vw, 80px);
+  bottom: 0;
+  height: 86vh;
+  max-height: 760px;
+  color: var(--ink);
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to top, #000 45%, transparent 100%);
+          mask-image: linear-gradient(to top, #000 45%, transparent 100%);
+}
+.deco-player { fill: var(--accent); animation: hop 2.4s ease-in-out infinite; }
+@keyframes hop {
+  0%, 70%, 100% { transform: translateY(0); }
+  80% { transform: translateY(-10px); }
+}
+@media (max-width: 760px) {
+  .deco { display: none; } /* スマホでは文字と重なるので非表示 */
+}
+
+/* ===== 小窓（ダイアログ） ===== */
+.panel {
+  width: min(460px, 92vw);
+  max-height: 86vh;
+  padding: 0;
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.panel[open] { animation: rise .25s ease-out; }
+.panel::backdrop { background: rgba(21, 21, 21, .35); backdrop-filter: blur(3px); }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+.panel-inner { padding: 26px 28px 28px; }
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.panel-head h2 { margin: 0; font-size: 18px; font-weight: 500; }
+.panel-head small { font-family: var(--en); font-size: 12px; color: var(--sub); margin-left: 6px; }
+.close { border: none; background: none; font-size: 12px; color: var(--sub); cursor: pointer; }
+.close:hover { color: var(--ink); }
+
+/* 遊び方 */
+.howto { margin: 0; padding: 0; list-style: none; counter-reset: h; }
+.howto li {
+  counter-increment: h;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.howto li::before {
+  content: counter(h, decimal-leading-zero);
+  font-family: var(--en);
+  font-size: 11px;
+  color: var(--sub);
+  width: 24px;
+}
+.keys { display: inline-flex; gap: 4px; }
 kbd {
-  display: inline-block;
+  display: inline-grid;
+  place-items: center;
   min-width: 26px;
-  text-align: center;
-  padding: 0 6px;
-  border-radius: 6px;
-  background: #2c2c5c;
-  border: 1px solid #4a4a8a;
-  border-bottom-width: 3px;
-  font-family: inherit;
+  height: 24px;
+  border: 1px solid var(--ink);
+  border-radius: 3px;
+  font-family: var(--en);
+  font-size: 12px;
 }
 
 /* タブ */
-.tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.tabs { display: flex; gap: 22px; margin-bottom: 18px; }
 .tab {
-  flex: 1;
-  padding: 8px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: transparent;
+  padding: 4px 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
   color: var(--sub);
-  font: inherit;
   cursor: pointer;
 }
-.tab.active { background: #2c2c5c; color: var(--text); border-color: #5a5aa0; }
+.tab.active { color: var(--ink); border-color: var(--accent); }
 
 /* フォーム */
-.auth-form { display: flex; flex-direction: column; gap: 10px; }
+.auth-form { display: flex; flex-direction: column; gap: 16px; }
+.auth-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--sub); }
+.auth-form label small { font-size: 11px; margin-left: 8px; color: #a6a198; }
 .auth-form input {
-  padding: 11px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: #14142e;
-  color: var(--text);
+  padding: 8px 0;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
   font: inherit;
-  font-size: 14px;
+  font-size: 15px;
 }
-.auth-form input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+.auth-form input:focus { outline: none; border-color: var(--ink); }
 
-.welcome { margin: 0 0 12px; }
-.welcome b { color: var(--accent); }
+.welcome { margin: 0 0 16px; }
+.welcome b { font-weight: 700; }
 
 /* ボタン */
 .btn {
-  padding: 11px 18px;
-  border: none;
-  border-radius: 12px;
-  background: var(--accent);
-  color: #3a2600;
-  font: inherit;
-  font-weight: 800;
+  padding: 12px 20px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 500;
+  letter-spacing: .05em;
   cursor: pointer;
-  box-shadow: 0 4px 0 #b3771a;
-  transition: transform .05s;
+  transition: background .2s, color .2s;
 }
-.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #b3771a; }
+.btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
 .btn:disabled { opacity: .5; cursor: wait; }
-.btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); box-shadow: none; }
-.btn.big {
-  display: block;
-  width: 100%;
-  font-size: 22px;
-  padding: 16px;
-  margin: 8px 0 6px;
-  background: var(--accent2);
-  color: #fff;
-  box-shadow: 0 5px 0 #a8355c;
-}
-.btn.big:active { box-shadow: 0 2px 0 #a8355c; }
+.btn.ghost { background: transparent; color: var(--ink); }
+.btn.ghost:hover { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 
-.msg { min-height: 1.4em; margin: 10px 0 0; font-size: 13px; }
+.msg { min-height: 1.4em; margin: 14px 0 0; font-size: 13px; }
 .msg.error { color: var(--ng); }
 .msg.ok { color: var(--ok); }
-.note { text-align: center; font-size: 12px; color: var(--sub); margin: 0 0 18px; }
 
 /* ランキング */
 .ranking { list-style: none; margin: 0; padding: 0; counter-reset: rank; }
 .ranking li {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 6px;
-  border-bottom: 1px dashed var(--line);
+  align-items: baseline;
+  gap: 14px;
+  padding: 11px 4px;
+  border-bottom: 1px solid var(--line);
   counter-increment: rank;
 }
 .ranking li::before {
-  content: counter(rank);
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
+  content: counter(rank, decimal-leading-zero);
+  font-family: var(--en);
   font-size: 13px;
-  background: #2c2c5c;
+  color: var(--sub);
+  width: 22px;
 }
-.ranking li:nth-child(1)::before { background: #e6b422; color: #3a2600; }
-.ranking li:nth-child(2)::before { background: #c0c6d0; color: #222; }
-.ranking li:nth-child(3)::before { background: #c47a3a; color: #2a1200; }
+.ranking li:first-child::before { color: var(--accent); font-weight: 500; }
 .ranking .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ranking .score { font-weight: 800; color: var(--accent); }
-.ranking li.me { background: rgba(255, 207, 74, .08); border-radius: 8px; }
-.ranking li.empty { color: var(--sub); justify-content: center; }
+.ranking .score { font-family: var(--en); font-weight: 500; font-size: 18px; }
+.ranking .score small { font-family: var(--ja); font-size: 11px; color: var(--sub); margin-left: 3px; }
+.ranking li.me .name::after { content: "YOU"; font-family: var(--en); font-size: 10px; color: var(--accent); margin-left: 8px; letter-spacing: .1em; }
+.ranking li.empty { color: var(--sub); justify-content: center; font-size: 13px; }
 .ranking li.empty::before { display: none; }
 
 /* ===== ゲーム画面 ===== */
@@ -186,8 +351,8 @@ kbd {
   display: block;
   width: 100%;
   aspect-ratio: 2 / 3;
-  border-radius: 18px;
-  border: 2px solid var(--line);
+  border-radius: 4px;
+  border: 1px solid var(--ink);
   touch-action: manipulation;
 }
 
@@ -195,29 +360,38 @@ kbd {
 .touch-btn {
   flex: 1;
   padding: 14px;
-  font-size: 26px;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background: var(--card);
-  color: var(--text);
+  font-family: var(--en);
+  font-size: 24px;
+  font-weight: 200;
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  background: transparent;
   cursor: pointer;
   user-select: none;
   touch-action: manipulation;
 }
-.touch-btn:active { background: #2c2c5c; }
+.touch-btn:active { background: var(--ink); color: var(--bg); }
 
 .overlay {
   position: absolute;
   inset: 0;
+  bottom: auto;
+  aspect-ratio: 2 / 3;
   display: grid;
   place-items: center;
-  background: rgba(10, 10, 30, .72);
-  border-radius: 18px;
+  background: rgba(243, 241, 236, .93);
+  border-radius: 4px;
+  border: 1px solid var(--ink);
 }
-.overlay[hidden] { display: none; }
 .overlay-box { text-align: center; padding: 20px; }
-.overlay-box h2 { font-size: 40px; margin: 0 0 8px; color: var(--accent2); letter-spacing: 2px; }
-.reason { margin: 0; color: var(--sub); }
-.final { font-size: 20px; margin: 0; }
-.final span { font-size: 48px; font-weight: 800; color: var(--accent); display: block; }
-.overlay-btns { display: flex; gap: 10px; justify-content: center; margin-top: 18px; }
+.overlay-box h2 {
+  font-family: var(--en);
+  font-weight: 200;
+  font-size: 44px;
+  letter-spacing: .12em;
+  margin: 4px 0 14px;
+}
+.reason { margin: 0; font-size: 13px; color: var(--accent); }
+.final { margin: 0; font-size: 14px; color: var(--sub); }
+.final span { font-family: var(--en); font-weight: 500; font-size: 64px; color: var(--ink); margin-right: 4px; }
+.overlay-btns { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
