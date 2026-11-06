@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Infinite Stairs</title>
+  <title>無限階段 — Infinite Stairs</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
@@ -156,6 +156,13 @@
   <!-- ゲーム画面                      -->
   <!-- ============================== -->
   <div id="game" class="screen">
+    <!-- 上部：ホーム画面と同じバー -->
+    <header class="topbar">
+      <span class="brand">∞ / STAIRS</span>
+      <button id="quitBtn" class="user-chip">← ホームへ（Esc）</button>
+    </header>
+
+    <div class="game-body">
     <div class="game-wrap">
       <canvas id="canvas"></canvas>
 
@@ -178,6 +185,7 @@
           </div>
         </div>
       </div>
+    </div>
     </div>
   </div>
 
