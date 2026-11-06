@@ -40,10 +40,33 @@ function renderUser() {
   $("loggedOut").hidden = loggedIn;
   $("loggedIn").hidden = !loggedIn;
   $("guestNote").hidden = loggedIn;
+  // 右上のログイン状態表示
+  $("userDot").classList.toggle("on", loggedIn);
+  $("userChip").textContent = loggedIn ? (currentUser.displayName || "名無し") : "ゲスト";
   if (loggedIn) {
     $("userName").textContent = currentUser.displayName || "名無し";
   }
 }
+
+// =====================================================
+// 小窓（ダイアログ）の開け閉め
+// =====================================================
+document.querySelectorAll("[data-open]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const id = btn.dataset.open;
+    $(id).showModal();
+    if (id === "rankingDialog") loadRanking(); // 開くたびに最新を読み込む
+  });
+});
+document.querySelectorAll("[data-close]").forEach((btn) => {
+  btn.addEventListener("click", () => btn.closest("dialog").close());
+});
+// 小窓の外側（暗い部分）をクリックしても閉じる
+document.querySelectorAll("dialog").forEach((dialog) => {
+  dialog.addEventListener("click", (e) => {
+    if (e.target === dialog) dialog.close();
+  });
+});
 
 function setAuthMsg(text, type = "") {
   const el = $("authMsg");
@@ -75,6 +98,7 @@ $("signupForm").addEventListener("submit", async (e) => {
     renderUser(); // ニックネームを表示に反映
     setAuthMsg("登録しました！ようこそ " + name + " さん", "ok");
     e.target.reset();
+    setTimeout(() => $("accountDialog").close(), 900);
   } catch (err) {
     setAuthMsg(toJapaneseError(err), "error");
   } finally {
@@ -92,6 +116,7 @@ $("loginForm").addEventListener("submit", async (e) => {
     await logIn($("loginEmail").value, $("loginPassword").value);
     setAuthMsg("ログインしました", "ok");
     e.target.reset();
+    setTimeout(() => $("accountDialog").close(), 900);
   } catch (err) {
     setAuthMsg(toJapaneseError(err), "error");
   } finally {
@@ -112,6 +137,7 @@ async function loadRanking() {
   const list = $("rankingList");
   try {
     const rows = await fetchRanking(10);
+    renderLeader(rows[0]);
     list.innerHTML = "";
     if (rows.length === 0) {
       list.innerHTML = '<li class="empty">まだ記録がありません</li>';
@@ -125,7 +151,10 @@ async function loadRanking() {
       name.textContent = row.name; // textContent を使うと名前に<タグ>が入っても安全
       const score = document.createElement("span");
       score.className = "score";
-      score.textContent = row.best + " 段";
+      score.textContent = row.best;
+      const unit = document.createElement("small");
+      unit.textContent = "段";
+      score.append(unit);
       li.append(name, score);
       list.append(li);
     }
@@ -136,6 +165,20 @@ async function loadRanking() {
     li.textContent = "ランキングを読み込めません：" + toJapaneseError(err);
     list.append(li);
   }
+}
+
+// ホーム画面の「現在の1位」表示
+function renderLeader(top) {
+  const el = $("leader");
+  if (!top) { el.hidden = true; return; }
+  el.hidden = false;
+  el.textContent = "現在の1位　";
+  const name = document.createElement("b");
+  name.textContent = top.name;
+  const num = document.createElement("span");
+  num.className = "num";
+  num.textContent = "　" + top.best;
+  el.append(name, num, "段");
 }
 
 // =====================================================
@@ -183,11 +226,20 @@ $("homeBtn").addEventListener("click", () => {
   loadRanking();
 });
 
-// ゲームオーバー画面で Enter を押すともう一度
+// Enter キー：ホームならスタート、ゲームオーバー画面ならもう一度
 window.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !$("overlay").hidden && $("game").classList.contains("active")) {
+  if (e.key !== "Enter") return;
+  if (document.querySelector("dialog[open]")) return;  // 小窓が開いているときは何もしない
+
+  // ホーム画面：どこにフォーカスがあっても Enter はスタート
+  if ($("home").classList.contains("active")) {
+    e.preventDefault(); // フォーカス中のボタンが押されるのを止める
     startGame();
+    return;
   }
+  // ゲームオーバー画面：ボタンにフォーカスがあるときはそのボタンに任せる
+  const onGameOver = $("game").classList.contains("active") && !$("overlay").hidden;
+  if (onGameOver && !e.target.closest("button")) startGame();
 });
 
 // スマホ用の ← → ボタン
