@@ -340,10 +340,15 @@ kbd {
 /* ===== ゲーム画面 ===== */
 #game.active {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
   min-height: 100vh;
-  padding: 12px;
+}
+.game-body {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 12px 24px;
 }
 .game-wrap { position: relative; width: min(400px, 100%); }
 
@@ -351,7 +356,7 @@ kbd {
   display: block;
   width: 100%;
   aspect-ratio: 2 / 3;
-  border-radius: 4px;
+  border-radius: 2px;
   border: 1px solid var(--ink);
   touch-action: manipulation;
 }
@@ -380,7 +385,7 @@ kbd {
   display: grid;
   place-items: center;
   background: rgba(243, 241, 236, .93);
-  border-radius: 4px;
+  border-radius: 2px;
   border: 1px solid var(--ink);
 }
 .overlay-box { text-align: center; padding: 20px; }
