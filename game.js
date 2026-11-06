@@ -8,8 +8,16 @@ const H = 600;          // キャンバスの論理的な高さ
 const STEP_X = 44;      // 1段登るごとに横へ進む距離
 const STEP_Y = 34;      // 1段登るごとに上へ進む距離
 const STAIR_W = 58;     // 段の幅
-const STAIR_H = 14;     // 段の厚み
 const PLAYER_SCREEN_Y = H * 0.66; // プレイヤーを画面のどの高さに表示するか
+
+// ---- 色（style.css の :root と同じ） ----
+const COLORS = {
+  bg: "#f3f1ec",
+  ink: "#151515",
+  sub: "#77736b",
+  line: "#d8d3c8",
+  accent: "#ff4d2e",
+};
 
 // ---- 難易度の設定 ----
 const TIME_MAX = 100;   // 時間ゲージの最大値
@@ -42,13 +50,6 @@ export class StairsGame {
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    // 背景の星（位置をランダムに決めておく）
-    this.stars = Array.from({ length: 45 }, () => ({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      size: Math.random() < 0.3 ? 2 : 1,
-    }));
 
     // this を固定しておく（イベントやrequestAnimationFrameで使うため）
     this.loop = this.loop.bind(this);
@@ -188,23 +189,20 @@ export class StairsGame {
   }
 
   // ---------- 描画 ----------
+  // 色は style.css の :root と同じ値にそろえています
 
   draw() {
     const ctx = this.ctx;
 
-    // 背景：登るほど空の色が変わっていく
-    const hue = (230 + this.score * 0.6) % 360;
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, `hsl(${hue}, 55%, 14%)`);
-    g.addColorStop(1, `hsl(${(hue + 40) % 360}, 55%, 32%)`);
-    ctx.fillStyle = g;
+    // 背景：ホーム画面と同じ生成り色
+    ctx.fillStyle = COLORS.bg;
     ctx.fillRect(0, 0, W, H);
-    this.drawStars();
 
     // ここからワールド座標（カメラに合わせてずらす）
     ctx.save();
     ctx.translate(W / 2 - this.cam.x, PLAYER_SCREEN_Y - this.cam.y);
 
+    this.drawMarkers();
     const from = Math.max(0, this.index - 16);
     const to = Math.min(this.stairs.length - 1, this.index + 22);
     for (let i = from; i <= to; i++) this.drawStair(i);
@@ -215,104 +213,96 @@ export class StairsGame {
     this.drawHud();
   }
 
-  drawStars() {
-    // カメラに合わせてゆっくり動く星（パララックス）
+  // 10段ごとの高さの目印（点線と段数）
+  drawMarkers() {
     const ctx = this.ctx;
-    ctx.fillStyle = "rgba(255,255,255,0.55)";
-    for (const s of this.stars) {
-      // ((a % b) + b) % b でマイナスにならない余りを出す（画面の端でループさせる）
-      const x = (((s.x - this.cam.x * 0.15) % W) + W) % W;
-      const y = (((s.y - this.cam.y * 0.15) % H) + H) % H;
-      ctx.fillRect(x, y, s.size, s.size);
+    const left = this.cam.x - W / 2;
+    const first = Math.max(10, Math.floor((this.index - 16) / 10) * 10);
+    ctx.save();
+    ctx.strokeStyle = COLORS.line;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 5]);
+    ctx.fillStyle = COLORS.sub;
+    ctx.font = "400 11px 'Jost', sans-serif";
+    ctx.textAlign = "left";
+    for (let i = first; i <= this.index + 22; i += 10) {
+      const y = -i * STEP_Y + 0.5;
+      ctx.beginPath();
+      ctx.moveTo(left + 44, y);
+      ctx.lineTo(left + W, y);
+      ctx.stroke();
+      ctx.fillText(String(i).padStart(3, "0"), left + 14, y + 4);
     }
+    ctx.restore();
   }
 
   drawStair(i) {
     const ctx = this.ctx;
     const p = this.standPos(i);
-    const hue = (40 + i * 2) % 360;
-    // 側面
-    ctx.fillStyle = `hsl(${hue}, 45%, 38%)`;
-    ctx.beginPath();
-    ctx.roundRect(p.x - STAIR_W / 2, p.y, STAIR_W, STAIR_H, 4);
-    ctx.fill();
-    // 上面（明るい色）
-    ctx.fillStyle = i % 10 === 0 && i > 0 ? "#ffe27a" : `hsl(${hue}, 70%, 68%)`;
-    ctx.beginPath();
-    ctx.roundRect(p.x - STAIR_W / 2, p.y, STAIR_W, 5, [4, 4, 0, 0]);
-    ctx.fill();
-    // 10段ごとに段数を表示
-    if (i % 10 === 0 && i > 0) {
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
-      ctx.font = "bold 10px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(i, p.x, p.y + 13);
-    }
+    // 通り過ぎた段は薄く、これからの段は黒い線で
+    ctx.fillStyle = i < this.index ? COLORS.line : COLORS.ink;
+    ctx.fillRect(p.x - STAIR_W / 2, p.y, STAIR_W, 4);
   }
 
   drawPlayer() {
     const ctx = this.ctx;
     const { x, y } = this.player; // 足元の位置
     const f = this.facing;
+    const size = 20;
 
-    // 体
-    ctx.fillStyle = "#ff6b9a";
-    ctx.beginPath();
-    ctx.roundRect(x - 11, y - 26, 22, 24, 8);
-    ctx.fill();
-    // 足
-    ctx.fillStyle = "#3a2350";
-    ctx.fillRect(x - 8, y - 4, 6, 4);
-    ctx.fillRect(x + 2, y - 4, 6, 4);
-    // 頭
-    ctx.fillStyle = "#ffe0c2";
-    ctx.beginPath();
-    ctx.arc(x, y - 36, 12, 0, Math.PI * 2);
-    ctx.fill();
-    // 目（向いている方向に寄せる）
-    ctx.fillStyle = "#2a1a33";
-    ctx.beginPath();
-    ctx.arc(x + f * 4, y - 37, 2.2, 0, Math.PI * 2);
-    ctx.arc(x + f * 9, y - 37, 2.2, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.save();
+    ctx.translate(x, y - size / 2); // 四角の中心へ
+    if (this.state !== "playing") {
+      ctx.rotate(this.fall.t * 7 * f); // 落ちるときはくるくる回る
+    }
+    // 体：ホーム画面の飾りと同じ朱色の四角
+    ctx.fillStyle = COLORS.accent;
+    ctx.fillRect(-size / 2, -size / 2, size, size);
+    // 目：向いている方向に寄せる
+    ctx.fillStyle = COLORS.ink;
+    ctx.fillRect(f * 4 - 2, -5, 4, 4);
+    ctx.restore();
   }
 
   drawHud() {
     const ctx = this.ctx;
 
-    // 上部を少し暗くしてスコアを読みやすくする
-    const shade = ctx.createLinearGradient(0, 0, 0, 120);
-    shade.addColorStop(0, "rgba(0,0,0,0.45)");
-    shade.addColorStop(1, "rgba(0,0,0,0)");
+    // 上部を背景色でぼかしてスコアを読みやすくする
+    const shade = ctx.createLinearGradient(0, 0, 0, 140);
+    shade.addColorStop(0, "rgba(243,241,236,1)");
+    shade.addColorStop(0.6, "rgba(243,241,236,0.9)");
+    shade.addColorStop(1, "rgba(243,241,236,0)");
     ctx.fillStyle = shade;
-    ctx.fillRect(0, 0, W, 120);
+    ctx.fillRect(0, 0, W, 140);
 
-    // スコア
-    ctx.textAlign = "center";
-    ctx.font = "500 46px 'Jost', sans-serif";
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = "rgba(0,0,0,0.5)";
-    ctx.strokeText(this.score, W / 2, 62);
-    ctx.fillStyle = "#fff";
-    ctx.fillText(this.score, W / 2, 62);
+    // スコア（細い大きな数字＋「段」）
+    ctx.textAlign = "left";
+    ctx.fillStyle = COLORS.ink;
+    ctx.font = "200 64px 'Jost', sans-serif";
+    ctx.fillText(this.score, 22, 78);
+    const w = ctx.measureText(String(this.score)).width;
+    ctx.fillStyle = COLORS.sub;
+    ctx.font = "500 13px 'Zen Kaku Gothic New', sans-serif";
+    ctx.fillText("段", 22 + w + 6, 76);
 
-    // 時間ゲージ
-    const bw = 240, bh = 12, bx = (W - bw) / 2, by = 80;
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
-    ctx.beginPath();
-    ctx.roundRect(bx, by, bw, bh, 6);
-    ctx.fill();
+    // 時間ゲージ（細い線の上に太い線）
+    const bx = 24, bw = W - 48, by = 98;
     const ratio = this.time / TIME_MAX;
-    ctx.fillStyle = ratio > 0.5 ? "#6be3a5" : ratio > 0.25 ? "#ffcf4a" : "#ff6b6b";
-    ctx.beginPath();
-    ctx.roundRect(bx, by, Math.max(bw * ratio, 0.1), bh, 6);
-    ctx.fill();
+    ctx.fillStyle = COLORS.sub;
+    ctx.font = "400 10px 'Jost', sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillText("TIME", bx + bw, by - 8);
+    ctx.fillStyle = COLORS.line;
+    ctx.fillRect(bx, by, bw, 1);
+    ctx.fillStyle = ratio > 0.3 ? COLORS.ink : COLORS.accent; // 残り少ないと朱色
+    ctx.fillRect(bx, by - 1, bw * ratio, 3);
 
     // スタート前のヒント
     if (!this.started && this.state === "playing") {
-      ctx.fillStyle = "rgba(255,255,255,0.9)";
-      ctx.font = "500 17px 'Zen Kaku Gothic New', sans-serif";
-      ctx.fillText("← → キーで登ろう！", W / 2, H - 40);
+      ctx.textAlign = "center";
+      ctx.fillStyle = COLORS.sub;
+      ctx.font = "500 14px 'Zen Kaku Gothic New', sans-serif";
+      ctx.fillText("← → で登ろう", W / 2, H - 36);
     }
   }
 }
