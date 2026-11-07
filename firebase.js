@@ -103,6 +103,39 @@ export async function fetchRanking(count = 10) {
 }
 
 // =====================================================
+// 設定（Cloud Firestore）
+// データの形：
+//   settings（コレクション）
+//     └ {ユーザーID}（ドキュメント）
+//          keyLeft: "ArrowLeft"   ← 左上へ登るキー
+//          keyRight: "ArrowRight" ← 右上へ登るキー
+//          seVolume: 0.7          ← 効果音の音量（0〜1）
+//          bgmVolume: 0.4         ← BGMの音量（0〜1）
+//          updatedAt: 日時
+// =====================================================
+
+/** ログイン中の人の設定を読み込む（まだ保存していなければ null） */
+export async function loadSettings() {
+  const user = auth.currentUser;
+  if (!user) return null;
+  const snap = await getDoc(doc(db, "settings", user.uid));
+  return snap.exists() ? snap.data() : null;
+}
+
+/** ログイン中の人の設定を保存する */
+export async function saveSettings(settings) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("ログインしていません");
+  await setDoc(doc(db, "settings", user.uid), {
+    keyLeft: settings.keyLeft,
+    keyRight: settings.keyRight,
+    seVolume: settings.seVolume,
+    bgmVolume: settings.bgmVolume,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+// =====================================================
 // エラーを日本語にする
 // =====================================================
 export function toJapaneseError(err) {
