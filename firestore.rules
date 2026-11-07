@@ -20,6 +20,14 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // 設定用：settings/{ユーザーID}
+    // 自分の設定だけ読み書きできる（他人の設定は見えない）
+    match /settings/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidSettings();
+      allow delete: if isOwner(userId);
+    }
+
     // ---- 関数 ----
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
@@ -31,6 +39,18 @@ service cloud.firestore {
           && d.keys().hasOnly(['name', 'best', 'updatedAt'])
           && d.name is string && d.name.size() >= 1 && d.name.size() <= 12
           && d.best is int && d.best >= 0 && d.best <= 100000
+          && d.updatedAt == request.time;
+    }
+
+    function isValidSettings() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['keyLeft', 'keyRight', 'seVolume', 'bgmVolume', 'updatedAt'])
+          && d.keys().hasOnly(['keyLeft', 'keyRight', 'seVolume', 'bgmVolume', 'updatedAt'])
+          && d.keyLeft is string && d.keyLeft.size() >= 1 && d.keyLeft.size() <= 32
+          && d.keyRight is string && d.keyRight.size() >= 1 && d.keyRight.size() <= 32
+          && d.keyLeft != d.keyRight
+          && d.seVolume is number && d.seVolume >= 0 && d.seVolume <= 1
+          && d.bgmVolume is number && d.bgmVolume >= 0 && d.bgmVolume <= 1
           && d.updatedAt == request.time;
     }
   }
