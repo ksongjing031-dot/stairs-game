@@ -12,6 +12,17 @@ import {
   fetchRanking,
   toJapaneseError,
 } from "./firebase.js";
+import { initAudio, playSE, setVolumes } from "./audio.js";
+import {
+  DEFAULTS,
+  RESERVED_KEYS,
+  getSettings,
+  onSettingsChange,
+  loadSettingsFor,
+  updateSettings,
+  saveCurrentSettings,
+  keyLabel,
+} from "./settings.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -32,7 +43,8 @@ function showScreen(id) {
 watchUser((user) => {
   currentUser = user;
   renderUser();
-  loadRanking(); // 自分の行を目立たせるため再読み込み
+  loadRanking();          // 自分の行を目立たせるため再読み込み
+  loadSettingsFor(user);  // その人のキー配置・音量を読み込む
 });
 
 function renderUser() {
@@ -46,6 +58,10 @@ function renderUser() {
   if (loggedIn) {
     $("userName").textContent = currentUser.displayName || "名無し";
   }
+  // 設定の保存先の説明
+  $("settingsWhere").textContent = loggedIn
+    ? `${currentUser.displayName || "名無し"} さんのアカウントに保存されます（別の端末でも同じ設定になります）`
+    : "ゲストの設定は、このブラウザにだけ保存されます";
 }
 
 // =====================================================
@@ -184,7 +200,10 @@ function renderLeader(top) {
 // =====================================================
 // ゲーム
 // =====================================================
-const game = new StairsGame($("canvas"), handleGameOver);
+const game = new StairsGame($("canvas"), {
+  onGameOver: handleGameOver,
+  onStep: playSE, // 1段登るたびに効果音
+});
 
 function startGame() {
   $("overlay").hidden = true;
