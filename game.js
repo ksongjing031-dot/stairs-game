@@ -37,12 +37,19 @@ function turnChance(stairIndex) {
 export class StairsGame {
   /**
    * @param {HTMLCanvasElement} canvas
-   * @param {(score:number, reason:string) => void} onGameOver ゲームオーバー時に呼ばれる
+   * @param {object} handlers
+   * @param {(score:number, reason:string) => void} handlers.onGameOver ゲームオーバー時に呼ばれる
+   * @param {() => void} [handlers.onStep] 1段登るたびに呼ばれる（効果音用）
    */
-  constructor(canvas, onGameOver) {
+  constructor(canvas, { onGameOver, onStep }) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.onGameOver = onGameOver;
+    this.onStep = onStep || (() => {});
+
+    // 操作キー（KeyboardEvent.code の値）。setKeys() で変更できる
+    this.keys = { left: "ArrowLeft", right: "ArrowRight" };
+    this.hint = "← → で登ろう";
     this.running = false;
 
     // 高解像度ディスプレイでもくっきり描画する
@@ -109,10 +116,16 @@ export class StairsGame {
 
   // ---------- 入力 ----------
 
+  /** 操作キーを変える。hint はスタート前に表示する文字 */
+  setKeys(left, right, hint) {
+    this.keys = { left, right };
+    if (hint) this.hint = hint;
+  }
+
   onKeyDown(e) {
     if (e.repeat) return; // 押しっぱなしで連続入力されないように
-    if (e.key === "ArrowLeft") { e.preventDefault(); this.move(-1); }
-    if (e.key === "ArrowRight") { e.preventDefault(); this.move(1); }
+    if (e.code === this.keys.left) { e.preventDefault(); this.move(-1); }
+    if (e.code === this.keys.right) { e.preventDefault(); this.move(1); }
   }
 
   /** dir: -1 = 左上へ / 1 = 右上へ */
@@ -128,6 +141,7 @@ export class StairsGame {
       // 正解：1段登る
       this.index++;
       this.score++;
+      this.onStep();
       this.time = Math.min(TIME_MAX, this.time + TIME_GAIN);
       // 先の階段が足りなくならないよう補充
       while (this.stairs.length < this.index + 40) this.addStair();
@@ -302,7 +316,7 @@ export class StairsGame {
       ctx.textAlign = "center";
       ctx.fillStyle = COLORS.sub;
       ctx.font = "500 14px 'Zen Kaku Gothic New', sans-serif";
-      ctx.fillText("← → で登ろう", W / 2, H - 36);
+      ctx.fillText(this.hint, W / 2, H - 36);
     }
   }
 }
