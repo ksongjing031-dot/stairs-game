@@ -275,3 +275,146 @@ document.querySelectorAll(".touch-btn").forEach((btn) => {
     game.move(Number(btn.dataset.dir));
   });
 });
+
+// =====================================================
+// サウンド
+// =====================================================
+
+// ブラウザの決まりで、最初のクリックかキー入力のあとでないと音を出せない
+window.addEventListener("pointerdown", initAudio, { once: true });
+window.addEventListener("keydown", initAudio, { once: true });
+
+// メニューやボタンを押したときにも効果音を鳴らす
+document.addEventListener("click", (e) => {
+  if (e.target.closest(".menu button, .start, .tab, .keycap, .user-chip, .btn")) playSE();
+});
+
+// =====================================================
+// 設定（キー配置・音量）
+// =====================================================
+
+let capturing = null;        // キー入力待ちの項目（"keyLeft" / "keyRight" / null）
+let ignoreCancelUntil = 0;   // Esc でキー入力待ちをやめたとき、小窓まで閉じないようにする
+
+// 設定が変わるたびに、ゲーム・音量・画面の表示に反映する
+onSettingsChange((s) => {
+  const left = keyLabel(s.keyLeft);
+  const right = keyLabel(s.keyRight);
+  game.setKeys(s.keyLeft, s.keyRight, `左 ${left} ／ 右 ${right} で登ろう`);
+  setVolumes({ se: s.seVolume, bgm: s.bgmVolume });
+
+  // 設定画面
+  $("bindLeft").textContent = capturing === "keyLeft" ? "キーを押す…" : left;
+  $("bindRight").textContent = capturing === "keyRight" ? "キーを押す…" : right;
+  $("bindLeft").classList.toggle("waiting", capturing === "keyLeft");
+  $("bindRight").classList.toggle("waiting", capturing === "keyRight");
+  renderSlider("bgmVolume", s.bgmVolume);
+  renderSlider("seVolume", s.seVolume);
+
+  // 遊び方の表示
+  $("howtoLeft").textContent = left;
+  $("howtoRight").textContent = right;
+});
+
+function renderSlider(id, value) {
+  const percent = Math.round(value * 100);
+  $(id).value = percent;
+  $(id).style.setProperty("--fill", percent + "%");
+  $(id + "Out").textContent = percent;
+}
+
+function setBindHint(text, type = "") {
+  $("bindHint").textContent = text;
+  $("bindHint").className = "set-hint " + type;
+}
+
+function setSettingsMsg(text, type = "") {
+  $("settingsMsg").textContent = text;
+  $("settingsMsg").className = "msg " + type;
+}
+
+/** 設定を変えて保存する */
+async function changeSettings(patch) {
+  updateSettings(patch);
+  try {
+    await saveCurrentSettings();
+    setSettingsMsg("保存しました", "ok");
+  } catch (err) {
+    setSettingsMsg("保存できませんでした：" + toJapaneseError(err), "error");
+  }
+}
+
+// ---- キー配置 ----
+document.querySelectorAll(".keycap").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    capturing = btn.dataset.bind;
+    setBindHint("新しいキーを押してください（Esc でキャンセル）");
+    updateSettings({}); // 表示だけ更新
+  });
+});
+
+// キー入力待ちのときは、ほかのどの処理よりも先にキーを受け取る（第3引数 true）
+window.addEventListener("keydown", (e) => {
+  if (!capturing) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+
+  const which = capturing;
+  capturing = null;
+
+  if (e.code === "Escape") {
+    ignoreCancelUntil = performance.now() + 200;
+    setBindHint("キャンセルしました");
+    updateSettings({});
+    return;
+  }
+  if (RESERVED_KEYS.includes(e.code)) {
+    setBindHint(`${keyLabel(e.code)} キーはほかの操作に使うため設定できません`, "error");
+    updateSettings({});
+    return;
+  }
+
+  const s = getSettings();
+  const other = which === "keyLeft" ? "keyRight" : "keyLeft";
+  const patch = { [which]: e.code };
+  if (s[other] === e.code) {
+    patch[other] = s[which]; // 反対側と同じキーなら、左右を入れ替える
+    setBindHint("左右のキーを入れ替えました");
+  } else {
+    setBindHint(`${keyLabel(e.code)} に変更しました`);
+  }
+  changeSettings(patch);
+}, true);
+
+$("resetKeys").addEventListener("click", () => {
+  capturing = null;
+  setBindHint("初期設定に戻しました");
+  changeSettings({ keyLeft: DEFAULTS.keyLeft, keyRight: DEFAULTS.keyRight });
+});
+
+// キー入力待ち中の Esc で小窓が閉じないようにする
+$("settingsDialog").addEventListener("cancel", (e) => {
+  if (performance.now() < ignoreCancelUntil) e.preventDefault();
+});
+// 小窓を閉じたらキー入力待ちも終わり
+$("settingsDialog").addEventListener("close", () => {
+  if (capturing) {
+    capturing = null;
+    updateSettings({});
+  }
+  setBindHint("変えたいキーをクリックしてから、新しいキーを押してください");
+  setSettingsMsg("");
+});
+
+// ---- 音量 ----
+for (const id of ["bgmVolume", "seVolume"]) {
+  // 動かしている間：すぐに音量を変える（保存はまだ）
+  $(id).addEventListener("input", () => {
+    updateSettings({ [id]: Number($(id).value) / 100 });
+  });
+  // 指を離したとき：保存する。効果音はお試しで1回鳴らす
+  $(id).addEventListener("change", () => {
+    changeSettings({ [id]: Number($(id).value) / 100 });
+    if (id === "seVolume") playSE();
+  });
+}
