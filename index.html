@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Infinite Stairs</title>
+  <title>無限階段 — Infinite Stairs</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
@@ -47,6 +47,7 @@
         <button data-open="howtoDialog"><i>01</i>遊び方</button>
         <button data-open="rankingDialog"><i>02</i>ランキング</button>
         <button data-open="accountDialog"><i>03</i>アカウント</button>
+        <button data-open="settingsDialog"><i>04</i>設定</button>
       </nav>
     </section>
 
@@ -84,7 +85,7 @@
         <button class="close" data-close>閉じる ×</button>
       </header>
       <ol class="howto">
-        <li><span class="keys"><kbd>←</kbd><kbd>→</kbd></span>左上 ／ 右上の段へ1段登る</li>
+        <li><span class="keys"><kbd id="howtoLeft">←</kbd><kbd id="howtoRight">→</kbd></span>左上 ／ 右上の段へ1段登る（キーは「設定」で変更可）</li>
         <li>次の段がない方向に進むと、落下してゲームオーバー</li>
         <li>上のゲージは残り時間。登ると回復し、0になっても落下</li>
         <li>高く登るほど時間の減りが速く、曲がり角も増えていく</li>
@@ -149,6 +150,47 @@
       </div>
 
       <p id="authMsg" class="msg"></p>
+    </div>
+  </dialog>
+
+  <!-- 設定 -->
+  <dialog id="settingsDialog" class="panel">
+    <div class="panel-inner">
+      <header class="panel-head">
+        <h2><i>04</i>設定</h2>
+        <button class="close" data-close>閉じる ×</button>
+      </header>
+
+      <section class="set-group">
+        <h3>操作キー</h3>
+        <div class="set-row">
+          <span>左上へ登る</span>
+          <button class="keycap" data-bind="keyLeft" id="bindLeft">←</button>
+        </div>
+        <div class="set-row">
+          <span>右上へ登る</span>
+          <button class="keycap" data-bind="keyRight" id="bindRight">→</button>
+        </div>
+        <p id="bindHint" class="set-hint">変えたいキーをクリックしてから、新しいキーを押してください</p>
+        <button id="resetKeys" class="text-link">初期設定（← →）に戻す</button>
+      </section>
+
+      <section class="set-group">
+        <h3>サウンド</h3>
+        <label class="set-row">
+          <span>BGM</span>
+          <input type="range" id="bgmVolume" min="0" max="100" step="1">
+          <output id="bgmVolumeOut">40</output>
+        </label>
+        <label class="set-row">
+          <span>効果音</span>
+          <input type="range" id="seVolume" min="0" max="100" step="1">
+          <output id="seVolumeOut">70</output>
+        </label>
+      </section>
+
+      <p id="settingsWhere" class="set-where"></p>
+      <p id="settingsMsg" class="msg"></p>
     </div>
   </dialog>
 
