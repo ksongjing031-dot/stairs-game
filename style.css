@@ -337,6 +337,85 @@ kbd {
 .ranking li.empty { color: var(--sub); justify-content: center; font-size: 13px; }
 .ranking li.empty::before { display: none; }
 
+/* 設定 */
+.set-group { margin-bottom: 22px; }
+.set-group h3 {
+  margin: 0 0 8px;
+  font-family: var(--en);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  color: var(--sub);
+}
+.set-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.set-row > span { flex: 1; }
+.keycap {
+  min-width: 96px;
+  padding: 7px 12px;
+  border: 1px solid var(--ink);
+  border-bottom-width: 3px;
+  border-radius: 4px;
+  background: transparent;
+  font-family: var(--en);
+  font-size: 15px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.keycap:hover { background: #ebe8e1; }
+.keycap.waiting {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-family: var(--ja);
+  font-size: 12px;
+  animation: blink 1s steps(2) infinite;
+}
+@keyframes blink { 50% { opacity: .45; } }
+.set-hint { margin: 10px 0 6px; font-size: 12px; color: var(--sub); min-height: 1.4em; }
+.set-hint.error { color: var(--ng); }
+.text-link {
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  font-size: 12px;
+  color: var(--sub);
+  cursor: pointer;
+}
+.text-link:hover { color: var(--ink); border-color: var(--ink); }
+
+/* 音量スライダー */
+.set-row input[type="range"] {
+  flex: 2;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 2px;
+  background: linear-gradient(var(--ink), var(--ink)) 0 / var(--fill, 50%) 100% no-repeat, var(--line);
+  cursor: pointer;
+}
+.set-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.set-row input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.set-row output { width: 34px; text-align: right; font-family: var(--en); font-size: 14px; }
+.set-where { margin: 0; font-size: 12px; color: var(--sub); }
+
 /* ===== ゲーム画面 ===== */
 #game.active {
   display: flex;
